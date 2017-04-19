@@ -2,9 +2,9 @@ import unittest
 import requests
 import json
 import tweepy
-from collections import Counter
 import sqlite3
 import twitter_info
+from collections import Counter
 from pprint import pprint
 
 ##########
@@ -116,11 +116,14 @@ movie_data_from_OMDB =[getMovieWithOMDB(x) for x in movie_list]
 #a list of tweet tuples into a variable for later
 ##########
 
+#this is a list of tuples in the form (movie, tweet dictionary)
 twitter_movie_search = []
 
 for x in movie_list:
 	data = search_twitter(x)
-	twitter_movie_search.append(data["statuses"])
+	a = data["statuses"]
+	for b in a:
+		twitter_movie_search.append((x,b))
 
 ##########
 #Create a database with three tables:
@@ -131,7 +134,6 @@ for x in movie_list:
 #- Movie Search
 #- Num Favs
 #- Num Retweets
-#- Hashtags
 ###Users:
 #- User ID (PRIMARY KEY)
 #- User screen name
@@ -158,7 +160,7 @@ cur.execute(statement)
 
 table_spec = 'CREATE TABLE IF NOT EXISTS '
 table_spec += 'Tweets (tweet_id TEXT PRIMARY KEY, '
-table_spec += 'tweet_text TEXT, user_id TEXT, movie_search TEXT, num_favs INTEGER, num_retweets INTEGER, hashtags TEXT)' #saying what type the categories should be in 
+table_spec += 'tweet_text TEXT, user_id TEXT, movie_search TEXT, num_favs INTEGER, num_retweets INTEGER)' #saying what type the categories should be in 
 cur.execute(table_spec)
 
 table_spec = 'CREATE TABLE IF NOT EXISTS '
@@ -172,33 +174,32 @@ table_spec += 'title TEXT, director TEXT, num_languages INTEGER, IMDB_rating INT
 cur.execute(table_spec)
 
 ##### TO POPULATE THE TWEETS TABLE #####
-# pprint(twitter_movie_search[0])
-# print(type(twitter_movie_search[0]))
-
 
 tweet_id = []
 tweet_text = []
 user_id =[]
-movie_search = [x for x in movie_list]
+movie_search = []
 num_favs = []
 num_retweets = []
-hashtags = []
-for y in twitter_movie_search:
-	for x in y:
-		tweet_id.append(x['id'])
-		tweet_text.append(x['text'])
-		user_id.append(x['user']['id'])
-		num_favs.append(x['user']['favourites_count'])
-		num_retweets.append(x['retweet_count'])
-		for hashtag in x['entities']['hashtags']:
-			hashtags.append(hashtag['text'])
-tweet_tuples = zip(tweet_id,tweet_text,user_id,movie_search,num_favs,num_retweets,hashtags)
+hashtags = [] #not in the database, a list of tuples (movie search, hashtag) 
+#becasue not sure if it will be meaningful (or possible) to have a cell in a database with multiple values - 
+#for now leaving it out of the database, but keeping it as a list
 
-statement = 'INSERT INTO Tweets VALUES (?, ?, ?, ?, ?, ?, ?)'
+for x in twitter_movie_search:
+	movie_search.append(x[0])
+	tweet_id.append(x[1]['id'])
+	tweet_text.append(x[1]['text'])
+	user_id.append(x[1]['user']['id'])
+	num_favs.append(x[1]['user']['favourites_count'])
+	num_retweets.append(x[1]['retweet_count'])
+	for hashtag in x[1]['entities']['hashtags']:
+		hashtags.append((x[0],hashtag['text']))
+tweet_tuples = zip(tweet_id,tweet_text,user_id,movie_search,num_favs,num_retweets)
+
+statement = 'INSERT INTO Tweets VALUES (?, ?, ?, ?, ?, ?)'
 for x in tweet_tuples:
 	cur.execute(statement, x)
 conn.commit()
-
 
 
 ##########
