@@ -315,8 +315,13 @@ conn.commit()
 
 conn.close()
 ##########
-#Write at least two trst methods for each function or class method that is defined
+#Write at least two test methods for each function or class method that is defined
 ##########
+Casablanca = getMovieWithOMDB("Casablanca")
+Casablanca_instance = Movie(Casablanca)
+a = str(Casablanca_instance)
+Casablanca_list_of_actors = Casablanca_instance.get_list_of_actors()
+Casablanca_num_languages = Casablanca_instance.get_num_languages()
 class Tests(unittest.TestCase):
 	def test_movie_info(self):
 		self.assertEqual(type(movie_data_from_OMDB),type(["list",1,2,3]),"Testing that the json information I got about each movie using the requests module is recoginized as a list")
@@ -329,10 +334,20 @@ class Tests(unittest.TestCase):
 		file = cache_file.read()
 		cache_file.close()
 		self.assertTrue(movie_list[1] in file)
+	def test_getMovieWithOMDB(self):
+		self.assertEqual(type(Casablanca),type({})),"Testing that getMovieWthOMDB returns a dictionary"
+	# def test_getMovieWithOMDB2(self):
+	# 	self.assertEqual
+	def test_strmethod(self):
+		self.assertEqual(a,"Casablanca is directed by Michael Curtiz and has an IMDB rating of 8.5", "Testing that the __str__ method returns the correct information")
+	# def test_strmethod2(self):
+	# 	self.assertEqual(type(a))
 	def test_getListofActors(self):
-		self.assertEqual(type(actors_list),type([]),"Testing that getListOfActors returns a list")
+		self.assertEqual(type(Casablanca_list_of_actors),type([]),"Testing that get_list_of_actors returns a list")
 	def test_getListofActors2(self):
-		self.assertEqual(type(actors_list[0]),type("djhsjfhj"),"Testing that getListOfActors returns a list of strings")
+		self.assertEqual(type(Casablanca_list_of_actors[0]),type("djhsjfhj"),"Testing that get_list_of_actors returns a list of strings")
+	def test_getnumlanguages(self):
+		self.assertEqual(type(Casablanca_num_languages),type(3),"Testing that get_num_languages returns an integer")
 	def test_People_and_Hashtags(self):
 		self.assertEqual(type(People_and_Hashtags),type({}),"Testing that People_and_Hashtags is a dictionary")
 	def test_People_and_Hashtags2(self):
