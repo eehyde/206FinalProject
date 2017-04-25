@@ -83,6 +83,16 @@ def getMovieWithOMDB(title):
 ###3 methods besides the constructor
 ##########
 
+class Movie(object):
+
+	def __init__(self, dictionary_input):
+		self.title = dictionary_input['Title']
+		self.director = dictionary_input['Director']
+		self.rating = dictionary_input['imdbRating']
+
+	def __str__(self):
+		return "{} is directed by {} and has an IMDB rating of {}".format(self.title,self.director,self.rating)
+
 ###########
 #[Optional] Define a class to handle the twitter data
 #For example a class Tweet and/or class TwitterUser
@@ -100,11 +110,18 @@ movie_list = ["Mulan","Inception","The Imitation Game"]
 ##########
 
 movie_data_from_OMDB =[getMovieWithOMDB(x) for x in movie_list]
+#pprint(movie_data_from_OMDB)
 
 ##########
 #Using the results from above, create a list of class instances
 ##########
 
+movie_instances = []
+for x in movie_data_from_OMDB:
+	movie_instances.append(Movie(x))
+
+for x in movie_instances:
+	print(x)
 ##########
 #Use the twitter search functions to search for either
 ###each of the directors of the three movies
@@ -159,12 +176,12 @@ statement = 'DROP TABLE IF EXISTS Movies'
 cur.execute(statement)
 
 table_spec = 'CREATE TABLE IF NOT EXISTS '
-table_spec += 'Tweets (tweet_id TEXT PRIMARY KEY, '
+table_spec += 'Tweets (tweet_id INTEGER PRIMARY KEY, '
 table_spec += 'tweet_text TEXT, user_id TEXT, movie_search TEXT, num_favs INTEGER, num_retweets INTEGER)' #saying what type the categories should be in 
 cur.execute(table_spec)
 
 table_spec = 'CREATE TABLE IF NOT EXISTS '
-table_spec += 'Users (user_id TEXT PRIMARY KEY, '
+table_spec += 'Users (user_id INTEGER PRIMARY KEY, '
 table_spec += 'user_screen_name TEXT, total_num_favs INTEGER, description TEXT)'
 cur.execute(table_spec)
 
@@ -200,6 +217,44 @@ statement = 'INSERT INTO Tweets VALUES (?, ?, ?, ?, ?, ?)'
 for x in tweet_tuples:
 	cur.execute(statement, x)
 conn.commit()
+
+##### TO POPULATE THE USERS TABLE #####
+list_of_users_possible_repeats = []
+
+for a_mention in twitter_movie_search:
+	for y in a_mention[1]['entities']['user_mentions']:
+		list_of_users_possible_repeats.append(y['screen_name'])
+for a_user in twitter_movie_search:
+	list_of_users_possible_repeats.append(a_user[1]['user']['screen_name'])
+
+list_of_users = []
+
+for x in list_of_users_possible_repeats:
+	if x not in list_of_users:
+		list_of_users.append(x)
+
+#print(list_of_users)
+
+user_user_id =[]
+user_screen_name = []
+user_num_favs = []
+user_description = []
+for x in list_of_users:
+	user_info = get_user_tweets(x)
+	for y in user_info:
+		user_user_id.append(y['user']['id'])
+		user_screen_name.append(y['user']['screen_name'])
+		user_num_favs.append(y['user']['favourites_count'])
+		user_description.append(y['user']['description'])
+users_tweet_tuples = zip(user_user_id,user_screen_name,user_num_favs,user_description)
+
+statement = 'INSERT OR IGNORE INTO Users VALUES (?, ?, ?, ?)'
+for x in users_tweet_tuples:
+    cur.execute(statement, x)
+conn.commit()
+
+##### TO POPULATE THE MOVIES TABLE #####
+
 
 
 ##########
