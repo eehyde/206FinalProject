@@ -86,12 +86,28 @@ def getMovieWithOMDB(title):
 class Movie(object):
 
 	def __init__(self, dictionary_input):
+		self.movie_ID = dictionary_input["imdbID"]
 		self.title = dictionary_input['Title']
 		self.director = dictionary_input['Director']
 		self.rating = dictionary_input['imdbRating']
+		self.actor_string = dictionary_input["Actors"]
+		self.languages = dictionary_input['Language']
+
+	def get_list_of_actors(self):
+		list_of_actors = self.actor_string.split(",")
+		return list_of_actors
+
+	def get_num_languages(self):
+		list_of_languages = self.languages.split(",")
+		return len(list_of_languages)
+
 
 	def __str__(self):
 		return "{} is directed by {} and has an IMDB rating of {}".format(self.title,self.director,self.rating)
+
+
+# for x in movie_instances:
+# 	print(x.get_list_of_actors())
 
 ###########
 #[Optional] Define a class to handle the twitter data
@@ -120,8 +136,6 @@ movie_instances = []
 for x in movie_data_from_OMDB:
 	movie_instances.append(Movie(x))
 
-for x in movie_instances:
-	print(x)
 ##########
 #Use the twitter search functions to search for either
 ###each of the directors of the three movies
@@ -254,8 +268,26 @@ for x in users_tweet_tuples:
 conn.commit()
 
 ##### TO POPULATE THE MOVIES TABLE #####
+movie_ID = []
+title = []
+director = []
+num_languages = []
+rating= []
+top_actor = []
 
+for x in movie_instances:
+	movie_ID.append(x.movie_ID)
+	title.append(x.title)
+	director.append(x.director)
+	num_languages.append(x.get_num_languages())
+	rating.append(x.rating)
+	top_actor.append(x.get_list_of_actors()[0])
+movie_tweet_tuples = zip(movie_ID,title,director,num_languages,rating,top_actor)
 
+statement = 'INSERT OR IGNORE INTO Movies VALUES (?, ?, ?, ?, ?, ?)'
+for x in movie_tweet_tuples:
+    cur.execute(statement, x)
+conn.commit()
 
 ##########
 #Load the data into the database
